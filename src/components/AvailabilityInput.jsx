@@ -91,10 +91,6 @@ function AvailabilityInput({ name, setName, parts, setParts, availability, setAv
           <h1>日程回答</h1>
           <p>基本情報と参加可否を入力してください。</p>
         </div>
-        <div className="choice-legend" aria-label="回答の凡例">
-          <span><b className="choice choice-yes">○</b> 参加可能</span>
-          <span><b className="choice choice-empty" /> ○ではない</span>
-        </div>
       </header>
 
       <section className="profile-form">
