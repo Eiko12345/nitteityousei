@@ -123,7 +123,8 @@ function AvailabilityInput({ name, setName, parts, setParts, availability, setAv
                 {Array.from({ length: piece.partCount }, (_, index) => {
                   const part = index + 1
                   const suffix = part === 1 ? 'st' : part === 2 ? 'nd' : part === 3 ? 'rd' : 'th'
-                  return <option key={part} value={part}>{part}{suffix}</option>
+                  const label = part === piece.assistantPart ? 'assi.' : `${part}${suffix}`
+                  return <option key={part} value={part}>{label}</option>
                 })}
               </select>
             </label>

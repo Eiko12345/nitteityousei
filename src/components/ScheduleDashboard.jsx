@@ -11,7 +11,8 @@ const dateLabel = (value) => {
   return `${year}年${month}月${day}日（${weekdays[new Date(year, month - 1, day).getDay()]}）`
 }
 
-const partLabel = (part) => {
+const partLabel = (part, piece) => {
+  if (Number(part) === piece?.assistantPart) return 'assi.'
   if (part === '1') return '1st'
   if (part === '2') return '2nd'
   if (part === '3') return '3rd'
@@ -54,10 +55,6 @@ function ScheduleDashboard({ responses, onAdd, onEdit, onDelete }) {
       <section className="dashboard-card">
         <div className="dashboard-section-title">
           <div><h2>曲ごとの練習可能時間</h2></div>
-          <div className="dashboard-legend">
-            <i className="yes" />全員○
-            <i className="no" />全員○ではない
-          </div>
         </div>
         <p className="dashboard-guide">日付をクリックすると、その日における全員の回答を曲ごとに確認できます。</p>
 
@@ -118,7 +115,7 @@ function ScheduleDashboard({ responses, onAdd, onEdit, onDelete }) {
                       <p className="detail-empty">この曲の回答者はいません。</p>
                     ) : getMembers(piece).map((member) => (
                       <div className="timeline-row" key={member.id}>
-                        <strong>{member.name}<small>{partLabel(member.parts[piece.id])}</small></strong>
+                        <strong>{member.name}<small>{partLabel(member.parts[piece.id], piece)}</small></strong>
                         <div className="timeline">
                           {timeSlots.map(({ start }) => {
                             const answer = member.availability[`${detail.date}-${start}`] === '○' ? '○' : '×'
@@ -150,7 +147,7 @@ function ScheduleDashboard({ responses, onAdd, onEdit, onDelete }) {
                   <li key={response.id}>
                     <span>
                       <b>{response.name}</b>
-                      <small>{pieces.filter((piece) => response.parts[piece.id]).map((piece) => `${piece.name} ${partLabel(response.parts[piece.id])}`).join(' / ') || '乗り番なし'}</small>
+                      <small>{pieces.filter((piece) => response.parts[piece.id]).map((piece) => `${piece.name} ${partLabel(response.parts[piece.id], piece)}`).join(' / ') || '乗り番なし'}</small>
                     </span>
                     <span className="management-actions">
                       <button className="edit-response-button" onClick={() => onEdit(response)}>変更</button>

@@ -12,6 +12,7 @@ export const pieces = [
   {
     id: 'main',
     name: 'メイン曲',
-    partCount: 4,
+    partCount: 5,
+    assistantPart: 5,
   },
 ]
