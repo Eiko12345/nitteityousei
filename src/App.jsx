@@ -1,5 +1,12 @@
 import { useEffect, useState } from 'react'
-import { doc, serverTimestamp, setDoc } from 'firebase/firestore'
+import {
+  collection,
+  deleteDoc,
+  doc,
+  onSnapshot,
+  serverTimestamp,
+  setDoc,
+} from 'firebase/firestore'
 
 import AvailabilityInput from './components/AvailabilityInput'
 import ScheduleDashboard from './components/ScheduleDashboard'
@@ -22,18 +29,25 @@ function App() {
     setAvailability,
   ] = useState({})
 
-  const [responses, setResponses] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('orchestra-responses')) || []
-    } catch {
-      return []
-    }
-  })
+  const [responses, setResponses] = useState([])
   const [editingResponseId, setEditingResponseId] = useState(null)
 
   useEffect(() => {
-    localStorage.setItem('orchestra-responses', JSON.stringify(responses))
-  }, [responses])
+    const unsubscribe = onSnapshot(
+      collection(db, 'responses'),
+      (snapshot) => {
+        setResponses(snapshot.docs.map((responseDoc) => ({
+          id: responseDoc.id,
+          ...responseDoc.data(),
+        })))
+      },
+      (error) => {
+        console.error('Firestoreから回答を取得できませんでした', error)
+      },
+    )
+
+    return unsubscribe
+  }, [])
 
   const startResponse = () => {
     setEditingResponseId(null)
@@ -51,8 +65,13 @@ function App() {
     setStep(1)
   }
 
-  const deleteResponse = (id) => {
-    setResponses((current) => current.filter((response) => response.id !== id))
+  const deleteResponse = async (id) => {
+    try {
+      await deleteDoc(doc(db, 'responses', id))
+    } catch (error) {
+      console.error('Firestoreから回答を削除できませんでした', error)
+      alert('回答の削除に失敗しました。通信環境を確認して、もう一度お試しください。')
+    }
   }
 
   const saveResponse = async (response) => {
@@ -76,11 +95,6 @@ function App() {
       createdAt: serverTimestamp(),
     })
 
-    setResponses((current) => editingResponseId
-      ? current.map((item) => item.id === editingResponseId
-        ? { ...savedResponse, id: editingResponseId }
-        : item)
-      : [...current, { ...savedResponse, id: responseId }])
     setEditingResponseId(null)
     setStep(0)
   }
