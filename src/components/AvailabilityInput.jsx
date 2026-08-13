@@ -13,6 +13,7 @@ const dateLabel = (dateString) => {
 
 function AvailabilityInput({ name, setName, parts, setParts, availability, setAvailability, setStep, onSubmit }) {
   const [month, setMonth] = useState(8)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const dragState = useRef({ active: false, value: false, visited: new Set() })
 
   const visibleDates = useMemo(
@@ -61,7 +62,7 @@ function AvailabilityInput({ name, setName, parts, setParts, availability, setAv
     dragState.current.active = false
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!name.trim()) {
       alert('名前を入力してください')
       return
@@ -70,7 +71,16 @@ function AvailabilityInput({ name, setName, parts, setParts, availability, setAv
     const availableOnly = Object.fromEntries(
       Object.entries(availability).filter(([, value]) => value === '○'),
     )
-    onSubmit({ name, parts, availability: availableOnly })
+    try {
+      setIsSubmitting(true)
+      await onSubmit({ name, parts, availability: availableOnly })
+      alert('回答を保存しました')
+    } catch (error) {
+      console.error('Firestoreへの回答保存に失敗しました', error)
+      alert('回答の保存に失敗しました。通信環境を確認して、もう一度お試しください。')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -178,7 +188,9 @@ function AvailabilityInput({ name, setName, parts, setParts, availability, setAv
 
       <footer className="availability-actions">
         <button className="secondary-button" onClick={() => setStep(0)}>戻る</button>
-        <button className="submit-button" onClick={handleSubmit}>回答する</button>
+        <button className="submit-button" disabled={isSubmitting} onClick={handleSubmit}>
+          {isSubmitting ? '保存中…' : '回答する'}
+        </button>
       </footer>
     </main>
   )

@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react'
+import { doc, serverTimestamp, setDoc } from 'firebase/firestore'
 
 import AvailabilityInput from './components/AvailabilityInput'
 import ScheduleDashboard from './components/ScheduleDashboard'
+import { fixedScheduleCandidates } from './data/fixedSchedule'
+import { db } from './firebase/firebase'
 
 function App() {
   const [step, setStep] = useState(0)
@@ -52,12 +55,32 @@ function App() {
     setResponses((current) => current.filter((response) => response.id !== id))
   }
 
-  const saveResponse = (response) => {
+  const saveResponse = async (response) => {
+    const responseId = editingResponseId || crypto.randomUUID()
+    const completeAvailability = Object.fromEntries(
+      fixedScheduleCandidates.map(({ id }) => [
+        id,
+        response.availability[id] === '○' ? '○' : '×',
+      ]),
+    )
+    const savedResponse = {
+      ...response,
+      name: response.name.trim(),
+      availability: completeAvailability,
+    }
+
+    await setDoc(doc(db, 'responses', responseId), {
+      name: savedResponse.name,
+      parts: savedResponse.parts,
+      availability: savedResponse.availability,
+      createdAt: serverTimestamp(),
+    })
+
     setResponses((current) => editingResponseId
       ? current.map((item) => item.id === editingResponseId
-        ? { ...response, id: editingResponseId }
+        ? { ...savedResponse, id: editingResponseId }
         : item)
-      : [...current, { ...response, id: crypto.randomUUID() }])
+      : [...current, { ...savedResponse, id: responseId }])
     setEditingResponseId(null)
     setStep(0)
   }
